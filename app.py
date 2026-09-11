@@ -644,6 +644,12 @@ with tab3:
             horizontal=True
         )
         
+        if "email_input_area" not in st.session_state:
+            st.session_state.email_input_area = ""
+
+        def set_template(sample_text):
+            st.session_state.email_input_area = sample_text
+
         # Sample templates for fast testing
         st.write("Or insert a sample template:")
         s_col1, s_col2, s_col3 = st.columns(3)
@@ -652,25 +658,17 @@ with tab3:
         spam_sample_1 = "URGENT: Click here to claim your $500 Amazon Gift card now! Limited time offer. Call 0800-449-3221."
         spam_sample_2 = "Free entry in a weekly competition to win FA Cup final tickets! Text WIN to 87121. T&C apply."
         
-        if s_col1.button("Normal Email (Ham)", use_container_width=True):
-            st.session_state.email_input = ham_sample
-        if s_col2.button("Promo Scam (Spam)", use_container_width=True):
-            st.session_state.email_input = spam_sample_1
-        if s_col3.button("Prize Alert (Spam)", use_container_width=True):
-            st.session_state.email_input = spam_sample_2
+        s_col1.button("Normal Email (Ham)", use_container_width=True, on_click=set_template, args=(ham_sample,))
+        s_col2.button("Promo Scam (Spam)", use_container_width=True, on_click=set_template, args=(spam_sample_1,))
+        s_col3.button("Prize Alert (Spam)", use_container_width=True, on_click=set_template, args=(spam_sample_2,))
             
         # Text input
         email_text = st.text_area(
             "Email Message Content:",
-            value=st.session_state.get("email_input", ""),
             height=140,
             placeholder="Paste email text here...",
             key="email_input_area"
         )
-        
-        # Align the input state
-        if email_text:
-            st.session_state.email_input = email_text
             
         btn_predict = st.button("🛡️ Run Spam Analysis", type="primary")
         
