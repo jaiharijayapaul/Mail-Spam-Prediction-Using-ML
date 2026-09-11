@@ -4,6 +4,7 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 import string
+import html
 import time
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
@@ -46,7 +47,7 @@ blue = "#3b82f6" if IS_DARK else "#2563eb"
 shadow = "none" if IS_DARK else "0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03)"
 
 # Injected CSS
-st.markdown(f"""
+st.html(f"""
 <style>
     /* Hide Streamlit chrome */
     header[data-testid="stHeader"], #MainMenu, footer, [data-testid="stToolbar"],
@@ -158,25 +159,29 @@ st.markdown(f"""
         margin-bottom: 1.5rem;
     }}
     
-    /* Cards and Wrappers */
-    .dashboard-card {{
-        background: {card};
-        border: 1px solid {border};
-        border-radius: 10px;
-        padding: 1.5rem;
-        box-shadow: {shadow};
-        margin-bottom: 1.5rem;
+    /* Native Streamlit Bordered Container Customization */
+    [data-testid="stVerticalBlockBorderWrapper"] {{
+        background: {card} !important;
+        border: 1px solid {border} !important;
+        border-radius: 12px !important;
+        padding: 1.25rem 1.4rem !important;
+        box-shadow: {shadow} !important;
+        margin-bottom: 1.25rem !important;
     }}
+    [data-testid="stVerticalBlockBorderWrapper"] > div {{
+        gap: 0.8rem !important;
+    }}
+    
     .card-title {{
         font-size: 0.95rem;
         font-weight: 600;
         color: {text};
-        margin-bottom: 0.4rem;
+        margin-bottom: 0.2rem;
     }}
     .card-subtitle {{
         font-size: 0.75rem;
         color: {text_muted};
-        margin-bottom: 1.2rem;
+        margin-bottom: 0.8rem;
     }}
     
     /* Styled HTML table */
@@ -184,8 +189,8 @@ st.markdown(f"""
         width: 100%;
         border-collapse: separate;
         border-spacing: 0;
-        font-size: 0.8rem;
-        margin-top: 0.5rem;
+        font-size: 0.82rem;
+        margin-top: 0.25rem;
     }}
     .data-table th {{
         text-align: left;
@@ -203,6 +208,7 @@ st.markdown(f"""
         color: {text};
         border-bottom: 1px solid {border_subtle};
         vertical-align: top;
+        line-height: 1.45;
     }}
     .data-table tr:last-child td {{
         border-bottom: none;
@@ -267,7 +273,7 @@ st.markdown(f"""
         gap: 1.5rem !important;
     }}
 </style>
-""", unsafe_allow_html=True)
+""")
 
 # --- TEXT PREPROCESSING DEFINITION ---
 STOPWORDS = {
@@ -362,14 +368,14 @@ df, cv, tfidf, nb_model, lr_model, evaluations = load_and_train_models()
 # --- BRAND HEADER ---
 head_left, head_right = st.columns([7, 1.2])
 with head_left:
-    st.markdown(f"""
+    st.html(f"""
     <div class="brand-container">
         <div>
             <div class="brand-logo">🛡️ Mail Spam <span>Guard</span></div>
             <div class="brand-tagline">Real-time intelligent email classification and security dashboard</div>
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 with head_right:
     theme_label = "☀️ Light Mode" if IS_DARK else "🌙 Dark Mode"
     st.button(theme_label, on_click=toggle_theme, use_container_width=True)
@@ -382,39 +388,39 @@ spam_ratio = (spam_count / total_count) * 100
 
 kpi_cols = st.columns(4)
 with kpi_cols[0]:
-    st.markdown(f"""
+    st.html(f"""
     <div class="metric-card">
         <div class="metric-label">Total Emails</div>
         <div class="metric-value">{total_count:,}</div>
         <div class="metric-subtext">Total records analyzed</div>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 with kpi_cols[1]:
-    st.markdown(f"""
+    st.html(f"""
     <div class="metric-card">
         <div class="metric-label">Ham (Normal)</div>
         <div class="metric-value" style="color: {green};">{ham_count:,}</div>
         <div class="metric-subtext">{(ham_count/total_count*100):.1f}% of total dataset</div>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 with kpi_cols[2]:
-    st.markdown(f"""
+    st.html(f"""
     <div class="metric-card">
         <div class="metric-label">Spam (Unwanted)</div>
         <div class="metric-value" style="color: {red};">{spam_count:,}</div>
         <div class="metric-subtext">{spam_ratio:.1f}% of total dataset</div>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 with kpi_cols[3]:
-    st.markdown(f"""
+    st.html(f"""
     <div class="metric-card">
         <div class="metric-label">Best Accuracy</div>
         <div class="metric-value" style="color: {blue};">{evaluations['Naive Bayes (Count)']['Accuracy']*100:.2f}%</div>
         <div class="metric-subtext">Naive Bayes + CountVectorizer</div>
     </div>
-    """, unsafe_allow_html=True)
+    """)
 
-st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+st.html("<div style='height: 10px;'></div>")
 
 # --- APP TABS ---
 tab1, tab2, tab3 = st.tabs([
@@ -428,268 +434,250 @@ with tab1:
     col1, col2 = st.columns([1, 1.5])
     
     with col1:
-        st.markdown(f"""
-        <div class="dashboard-card">
+        with st.container(border=True):
+            st.html("""
             <div class="card-title">Class Balance</div>
             <div class="card-subtitle">Showing counts and ratios of ham vs. spam</div>
-        """, unsafe_allow_html=True)
+            """)
+            
+            # Plotly Class Distribution Pie
+            fig_pie = go.Figure(data=[go.Pie(
+                labels=['Ham (Normal)', 'Spam (Unwanted)'],
+                values=[ham_count, spam_count],
+                hole=.4,
+                marker_colors=['#3b82f6', '#ef4444'],
+                textinfo='percent+label',
+                textfont=dict(family="DM Sans, sans-serif", size=12, color="#ffffff" if IS_DARK else "#09090b")
+            )])
+            fig_pie.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                showlegend=False,
+                margin=dict(t=0, b=0, l=0, r=0),
+                height=260,
+            )
+            st.plotly_chart(fig_pie, use_container_width=True, config={"displayModeBar": False})
         
-        # Plotly Class Distribution Pie
-        fig_pie = go.Figure(data=[go.Pie(
-            labels=['Ham (Normal)', 'Spam (Unwanted)'],
-            values=[ham_count, spam_count],
-            hole=.4,
-            marker_colors=['#3b82f6', '#ef4444'],
-            textinfo='percent+label',
-            textfont=dict(family="DM Sans, sans-serif", size=12, color="#ffffff" if IS_DARK else "#09090b")
-        )])
-        fig_pie.update_layout(
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            showlegend=False,
-            margin=dict(t=0, b=0, l=0, r=0),
-            height=280,
-        )
-        st.plotly_chart(fig_pie, use_container_width=True, config={"displayModeBar": False})
-        st.markdown("</div>", unsafe_allow_html=True)
-        
-        st.markdown(f"""
-        <div class="dashboard-card">
+        with st.container(border=True):
+            st.html("""
             <div class="card-title">Key Vocabulary Analysis</div>
             <div class="card-subtitle">Common words extracted after stopword removal</div>
-        """, unsafe_allow_html=True)
-        
-        # Plot common words in spam
-        spam_messages = " ".join(df[df['label'] == 1]['cleaned_message'])
-        spam_words = pd.Series(spam_messages.split()).value_counts().head(8)
-        
-        fig_words = px.bar(
-            x=spam_words.values,
-            y=spam_words.index,
-            orientation='h',
-            labels={'x': 'Frequency', 'y': 'Words'},
-            color_discrete_sequence=['#ef4444']
-        )
-        fig_words.update_layout(
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(family="DM Sans, sans-serif", color=text_muted, size=11),
-            margin=dict(l=0, r=0, t=10, b=0),
-            height=200,
-            xaxis=dict(gridcolor=border_subtle, tickfont=dict(color=text_muted)),
-            yaxis=dict(autorange="reversed", tickfont=dict(color=text_muted))
-        )
-        st.plotly_chart(fig_words, use_container_width=True, config={"displayModeBar": False})
-        st.markdown("</div>", unsafe_allow_html=True)
+            """)
+            
+            # Plot common words in spam
+            spam_messages = " ".join(df[df['label'] == 1]['cleaned_message'])
+            spam_words = pd.Series(spam_messages.split()).value_counts().head(8)
+            
+            fig_words = px.bar(
+                x=spam_words.values,
+                y=spam_words.index,
+                orientation='h',
+                labels={'x': 'Frequency', 'y': 'Words'},
+                color_discrete_sequence=['#ef4444']
+            )
+            fig_words.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(family="DM Sans, sans-serif", color=text_muted, size=11),
+                margin=dict(l=0, r=0, t=10, b=0),
+                height=200,
+                xaxis=dict(gridcolor=border_subtle, tickfont=dict(color=text_muted)),
+                yaxis=dict(autorange="reversed", tickfont=dict(color=text_muted))
+            )
+            st.plotly_chart(fig_words, use_container_width=True, config={"displayModeBar": False})
         
     with col2:
-        st.markdown(f"""
-        <div class="dashboard-card" style="height: 100%;">
+        with st.container(border=True):
+            st.html("""
             <div class="card-title">Dataset Samples</div>
             <div class="card-subtitle">Explore raw messages and labels from mail_data.csv</div>
-        """, unsafe_allow_html=True)
-        
-        # Display sample data in styled HTML table
-        sample_hams = df[df['label'] == 0].sample(3, random_state=42)[['Category', 'Message']]
-        sample_spams = df[df['label'] == 1].sample(3, random_state=42)[['Category', 'Message']]
-        samples = pd.concat([sample_hams, sample_spams]).sample(frac=1, random_state=42)
-        
-        table_rows = ""
-        for _, row in samples.iterrows():
-            badge_class = "badge-ham" if row['Category'] == 'ham' else "badge-spam"
-            label_text = "HAM" if row['Category'] == 'ham' else "SPAM"
-            table_rows += f"""
-            <tr>
-                <td style="width: 80px;"><span class="badge {badge_class}">{label_text}</span></td>
-                <td>{row['Message']}</td>
-            </tr>
-            """
+            """)
             
-        st.markdown(f"""
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Category</th>
-                    <th>Message Body</th>
-                </tr>
-            </thead>
-            <tbody>
-                {table_rows}
-            </tbody>
-        </table>
-        """, unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+            # Display sample data in styled HTML table
+            sample_hams = df[df['label'] == 0].sample(3, random_state=42)[['Category', 'Message']]
+            sample_spams = df[df['label'] == 1].sample(3, random_state=42)[['Category', 'Message']]
+            samples = pd.concat([sample_hams, sample_spams]).sample(frac=1, random_state=42)
+            
+            sample_rows = []
+            for _, row in samples.iterrows():
+                badge_class = "badge-ham" if row['Category'] == 'ham' else "badge-spam"
+                label_text = "HAM" if row['Category'] == 'ham' else "SPAM"
+                safe_msg = html.escape(str(row['Message']))
+                sample_rows.append(
+                    f'<tr>'
+                    f'<td style="width: 80px;"><span class="badge {badge_class}">{label_text}</span></td>'
+                    f'<td>{safe_msg}</td>'
+                    f'</tr>'
+                )
+            
+            table_sample_html = (
+                f'<table class="data-table">'
+                f'<thead><tr><th style="width: 80px;">Category</th><th>Message Body</th></tr></thead>'
+                f'<tbody>{"".join(sample_rows)}</tbody>'
+                f'</table>'
+            )
+            st.html(table_sample_html)
 
 # ================= TAB 2: MODEL PERFORMANCE =================
 with tab2:
-    st.markdown(f"""
-    <div class="dashboard-card">
+    with st.container(border=True):
+        st.html("""
         <div class="card-title">Model Evaluation Comparison</div>
         <div class="card-subtitle">Comparative metrics on testing split (20% of data, stratified)</div>
-    """, unsafe_allow_html=True)
-    
-    # Formulate metrics dataframe
-    metrics_list = []
-    for m_name, vals in evaluations.items():
-        metrics_list.append({
-            'Model Configuration': m_name,
-            'Accuracy': f"{vals['Accuracy']*100:.2f}%",
-            'Precision': f"{vals['Precision']*100:.2f}%",
-            'Recall': f"{vals['Recall']*100:.2f}%",
-            'F1-Score': f"{vals['F1-score']:.4f}"
-        })
-    df_compare = pd.DataFrame(metrics_list)
-    
-    # Convert to HTML table
-    table_compare_rows = ""
-    for _, row in df_compare.iterrows():
-        # Highlight best model
-        is_best = "font-weight: bold; color: " + blue if "Naive Bayes (Count)" in row['Model Configuration'] else ""
-        table_compare_rows += f"""
-        <tr style="{is_best}">
-            <td>{row['Model Configuration']}</td>
-            <td>{row['Accuracy']}</td>
-            <td>{row['Precision']}</td>
-            <td>{row['Recall']}</td>
-            <td>{row['F1-Score']}</td>
-        </tr>
-        """
+        """)
         
-    st.markdown(f"""
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>Model Configuration</th>
-                <th>Accuracy</th>
-                <th>Precision</th>
-                <th>Recall</th>
-                <th>F1-Score</th>
-            </tr>
-        </thead>
-        <tbody>
-            {table_compare_rows}
-        </tbody>
-    </table>
-    """, unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
+        # Formulate metrics dataframe
+        metrics_list = []
+        for m_name, vals in evaluations.items():
+            metrics_list.append({
+                'Model Configuration': m_name,
+                'Accuracy': f"{vals['Accuracy']*100:.2f}%",
+                'Precision': f"{vals['Precision']*100:.2f}%",
+                'Recall': f"{vals['Recall']*100:.2f}%",
+                'F1-Score': f"{vals['F1-score']:.4f}"
+            })
+        df_compare = pd.DataFrame(metrics_list)
+        
+        # Convert to HTML table
+        compare_rows = []
+        for _, row in df_compare.iterrows():
+            # Highlight best model
+            is_best = f"font-weight: 600; color: {blue};" if "Naive Bayes (Count)" in row['Model Configuration'] else ""
+            compare_rows.append(
+                f'<tr style="{is_best}">'
+                f'<td>{row["Model Configuration"]}</td>'
+                f'<td>{row["Accuracy"]}</td>'
+                f'<td>{row["Precision"]}</td>'
+                f'<td>{row["Recall"]}</td>'
+                f'<td>{row["F1-Score"]}</td>'
+                f'</tr>'
+            )
+            
+        table_perf_html = (
+            f'<table class="data-table">'
+            f'<thead><tr>'
+            f'<th>Model Configuration</th>'
+            f'<th>Accuracy</th>'
+            f'<th>Precision</th>'
+            f'<th>Recall</th>'
+            f'<th>F1-Score</th>'
+            f'</tr></thead>'
+            f'<tbody>{"".join(compare_rows)}</tbody>'
+            f'</table>'
+        )
+        st.html(table_perf_html)
     
     # Confusion Matrices Section
     st.markdown("### Confusion Matrices (CountVectorizer Models)")
     cm_col1, cm_col2 = st.columns(2)
     
     with cm_col1:
-        st.markdown(f"""
-        <div class="dashboard-card">
+        with st.container(border=True):
+            st.html("""
             <div class="card-title">Naive Bayes Confusion Matrix</div>
             <div class="card-subtitle">Model correctly predicts 962 Hams, 132 Spams; misses 17 Spams</div>
-        """, unsafe_allow_html=True)
-        
-        cm_nb = evaluations["Naive Bayes (Count)"]["CM"]
-        z_nb = cm_nb
-        x_nb = ['Predicted Ham', 'Predicted Spam']
-        y_nb = ['True Ham', 'True Spam']
-        
-        fig_cm_nb = go.Figure(data=go.Heatmap(
-            z=z_nb, x=x_nb, y=y_nb,
-            colorscale='Blues',
-            text=z_nb, texttemplate="%{text}",
-            textfont={"size":14, "color":"white", "family":"DM Sans, sans-serif"},
-            showscale=False
-        ))
-        fig_cm_nb.update_layout(
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            height=240,
-            margin=dict(t=10, b=10, l=40, r=10),
-            xaxis=dict(tickfont=dict(color=text_muted)),
-            yaxis=dict(tickfont=dict(color=text_muted))
-        )
-        st.plotly_chart(fig_cm_nb, use_container_width=True, config={"displayModeBar": False})
-        st.markdown("</div>", unsafe_allow_html=True)
+            """)
+            
+            cm_nb = evaluations["Naive Bayes (Count)"]["CM"]
+            z_nb = cm_nb
+            x_nb = ['Predicted Ham', 'Predicted Spam']
+            y_nb = ['True Ham', 'True Spam']
+            
+            fig_cm_nb = go.Figure(data=go.Heatmap(
+                z=z_nb, x=x_nb, y=y_nb,
+                colorscale='Blues',
+                text=z_nb, texttemplate="%{text}",
+                textfont={"size":14, "color":"white", "family":"DM Sans, sans-serif"},
+                showscale=False
+            ))
+            fig_cm_nb.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                height=240,
+                margin=dict(t=10, b=10, l=40, r=10),
+                xaxis=dict(tickfont=dict(color=text_muted)),
+                yaxis=dict(tickfont=dict(color=text_muted))
+            )
+            st.plotly_chart(fig_cm_nb, use_container_width=True, config={"displayModeBar": False})
         
     with cm_col2:
-        st.markdown(f"""
-        <div class="dashboard-card">
+        with st.container(border=True):
+            st.html("""
             <div class="card-title">Logistic Regression Confusion Matrix</div>
             <div class="card-subtitle">Model has 100% Precision (0 False Positives); misses 22 Spams</div>
-        """, unsafe_allow_html=True)
-        
-        cm_lr = evaluations["Logistic Regression (Count)"]["CM"]
-        z_lr = cm_lr
-        x_lr = ['Predicted Ham', 'Predicted Spam']
-        y_lr = ['True Ham', 'True Spam']
-        
-        fig_cm_lr = go.Figure(data=go.Heatmap(
-            z=z_lr, x=x_lr, y=y_lr,
-            colorscale='Blues',
-            text=z_lr, texttemplate="%{text}",
-            textfont={"size":14, "color":"white", "family":"DM Sans, sans-serif"},
-            showscale=False
-        ))
-        fig_cm_lr.update_layout(
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            height=240,
-            margin=dict(t=10, b=10, l=40, r=10),
-            xaxis=dict(tickfont=dict(color=text_muted)),
-            yaxis=dict(tickfont=dict(color=text_muted))
-        )
-        st.plotly_chart(fig_cm_lr, use_container_width=True, config={"displayModeBar": False})
-        st.markdown("</div>", unsafe_allow_html=True)
+            """)
+            
+            cm_lr = evaluations["Logistic Regression (Count)"]["CM"]
+            z_lr = cm_lr
+            x_lr = ['Predicted Ham', 'Predicted Spam']
+            y_lr = ['True Ham', 'True Spam']
+            
+            fig_cm_lr = go.Figure(data=go.Heatmap(
+                z=z_lr, x=x_lr, y=y_lr,
+                colorscale='Blues',
+                text=z_lr, texttemplate="%{text}",
+                textfont={"size":14, "color":"white", "family":"DM Sans, sans-serif"},
+                showscale=False
+            ))
+            fig_cm_lr.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                height=240,
+                margin=dict(t=10, b=10, l=40, r=10),
+                xaxis=dict(tickfont=dict(color=text_muted)),
+                yaxis=dict(tickfont=dict(color=text_muted))
+            )
+            st.plotly_chart(fig_cm_lr, use_container_width=True, config={"displayModeBar": False})
 
 # ================= TAB 3: LIVE PREDICTION DEMO =================
 with tab3:
-    st.markdown(f"""
-    <div class="dashboard-card">
+    with st.container(border=True):
+        st.html("""
         <div class="card-title">Test Spam Guard Live</div>
         <div class="card-subtitle">Type or paste any email content below to predict whether it is Spam or Not Spam</div>
-    """, unsafe_allow_html=True)
-    
-    # Model Selection
-    sel_model_name = st.radio(
-        "Select Classification Algorithm:",
-        ["Multinomial Naive Bayes (Recommended - Higher Recall)", "Logistic Regression (Perfect Precision)"],
-        horizontal=True
-    )
-    
-    # Sample templates for fast testing
-    st.write("Or insert a sample template:")
-    s_col1, s_col2, s_col3 = st.columns(3)
-    
-    ham_sample = "Hey there, are we still meeting for lunch at 1 PM today? Let me know if you want me to bring anything."
-    spam_sample_1 = "URGENT: Click here to claim your $500 Amazon Gift card now! Limited time offer. Call 0800-449-3221."
-    spam_sample_2 = "Free entry in a weekly competition to win FA Cup final tickets! Text WIN to 87121. T&C apply."
-    
-    if s_col1.button("Normal Email (Ham)", use_container_width=True):
-        st.session_state.email_input = ham_sample
-    if s_col2.button("Promo Scam (Spam)", use_container_width=True):
-        st.session_state.email_input = spam_sample_1
-    if s_col3.button("Prize Alert (Spam)", use_container_width=True):
-        st.session_state.email_input = spam_sample_2
+        """)
         
-    # Text input
-    email_text = st.text_area(
-        "Email Message Content:",
-        value=st.session_state.get("email_input", ""),
-        height=140,
-        placeholder="Paste email text here...",
-        key="email_input_area"
-    )
-    
-    # Align the input state
-    if email_text:
-        st.session_state.email_input = email_text
+        # Model Selection
+        sel_model_name = st.radio(
+            "Select Classification Algorithm:",
+            ["Multinomial Naive Bayes (Recommended - Higher Recall)", "Logistic Regression (Perfect Precision)"],
+            horizontal=True
+        )
         
-    btn_predict = st.button("🛡️ Run Spam Analysis", type="primary")
-    
-    if btn_predict:
-        if not email_text.strip():
-            st.warning("Please enter some email content first!")
-        else:
-            # Spinner
-            with st.spinner("Analyzing message vocabulary and executing classification models..."):
-                time.sleep(0.6) # Micro-animation wait state for premium UX
-                
+        # Sample templates for fast testing
+        st.write("Or insert a sample template:")
+        s_col1, s_col2, s_col3 = st.columns(3)
+        
+        ham_sample = "Hey there, are we still meeting for lunch at 1 PM today? Let me know if you want me to bring anything."
+        spam_sample_1 = "URGENT: Click here to claim your $500 Amazon Gift card now! Limited time offer. Call 0800-449-3221."
+        spam_sample_2 = "Free entry in a weekly competition to win FA Cup final tickets! Text WIN to 87121. T&C apply."
+        
+        if s_col1.button("Normal Email (Ham)", use_container_width=True):
+            st.session_state.email_input = ham_sample
+        if s_col2.button("Promo Scam (Spam)", use_container_width=True):
+            st.session_state.email_input = spam_sample_1
+        if s_col3.button("Prize Alert (Spam)", use_container_width=True):
+            st.session_state.email_input = spam_sample_2
+            
+        # Text input
+        email_text = st.text_area(
+            "Email Message Content:",
+            value=st.session_state.get("email_input", ""),
+            height=140,
+            placeholder="Paste email text here...",
+            key="email_input_area"
+        )
+        
+        # Align the input state
+        if email_text:
+            st.session_state.email_input = email_text
+            
+        btn_predict = st.button("🛡️ Run Spam Analysis", type="primary")
+        
+        if btn_predict:
+            if not email_text.strip():
+                st.warning("Please enter some email content first!")
+            else:
                 # Preprocess text
                 cleaned = clean_text(email_text)
                 
@@ -713,9 +701,10 @@ with tab3:
                 pred_label = "SPAM - UNWANTED" if prediction == 1 else "HAM - SAFE"
                 badge_class = "badge-spam" if prediction == 1 else "badge-ham"
                 badge_icon = "🚨" if prediction == 1 else "✅"
+                safe_cleaned = html.escape(cleaned if cleaned else "[No words left after preprocessing]")
                 
                 # Output UI block
-                st.markdown(f"""
+                st.html(f"""
                 <div class="prediction-container">
                     <div class="prediction-title">
                         <span>{badge_icon} Analysis Verdict:</span>
@@ -743,10 +732,8 @@ with tab3:
                     <div style="margin-top: 1.2rem;">
                         <div class="metric-label" style="margin-bottom: 0.4rem;">Cleaned Vocabulary Tokens</div>
                         <code style="background: {bg}; border: 1px solid {border}; padding: 6px 12px; border-radius: 6px; display: block; font-size: 0.8rem; color: {text_muted}; font-family: 'JetBrains Mono', monospace;">
-                            {cleaned if cleaned else "[No words left after preprocessing]"}
+                            {safe_cleaned}
                         </code>
                     </div>
                 </div>
-                """, unsafe_allow_html=True)
-                
-    st.markdown("</div>", unsafe_allow_html=True)
+                """)
